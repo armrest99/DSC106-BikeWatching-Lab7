@@ -1,0 +1,42 @@
+name: Deploy GitHub Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/configure-pages@v5
+      - name: Prepare static page
+        env:
+          MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_ACCESS_TOKEN }}
+        run: |
+          mkdir -p _site/assets
+          cp index.html global.css map.css _site/
+          cp assets/favicon.svg _site/assets/
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          token = os.environ['MAPBOX_ACCESS_TOKEN']
+          if not token.startswith('pk.'):
+              raise SystemExit('Set the MAPBOX_ACCESS_TOKEN repository secret to a public Mapbox token.')
+          source = Path('map.js').read_text(encoding='utf-8-sig')
+          Path('_site/map.js').write_text(source.replace('YOUR_MAPBOX_ACCESS_TOKEN', token), encoding='utf-8')
+          PY
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+      - uses: actions/deploy-pages@v4
+        id: deployment
