@@ -152,9 +152,9 @@ map.on('load', async () => {
   map.on('resize', updatePositions);
   map.on('moveend', updatePositions);
 
-  const timeSlider = document.getElementById('#time-slider');
-  const selectedTime = document.getElementById('#selected-time');
-  const anyTimeLabel = document.getElementById('#any-time');
+  const timeSlider = document.getElementById('time-slider');
+  const selectedTime = document.getElementById('selected-time');
+  const anyTimeLabel = document.getElementById('any-time');
 
   function updateScatterPlot(timeFilter) {
     const filteredStations = computeStationTraffic(stations, timeFilter);
