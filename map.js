@@ -1,6 +1,8 @@
 import mapboxgl from 'https://cdn.jsdelivr.net/npm/mapbox-gl@2.15.0/+esm';
 import * as d3 from 'https://cdn.jsdelivr.net/npm/d3@7.9.0/+esm';
 
+console.log('Mapbox GL JS Loaded:', mapboxgl);
+
 mapboxgl.accessToken = 'pk.eyJ1IjoiYW1rcmlzaG5ha3VtYXIiLCJhIjoiY213aDFxYjE4MGlmMjJ4cTQ5M2Nybm01OSJ9.1iPRE_f54lUvIna9td_QJw';
 
 const map = new mapboxgl.Map({
@@ -69,7 +71,7 @@ function computeStationTraffic(stations, timeFilter = -1) {
 map.on('load', async () => {
   map.addSource('boston_route', {
     type: 'geojson',
-    data: 'https://bostonopendata-boston.opendata.arcgis.com/datasets/boston::existing-bike-network-2022.geojson?outSR=4326',
+    data: 'https://bostonopendata-boston.opendata.arcgis.com/datasets/boston::existing-bike-network-2022.geojson?outSR=%7B%22latestWkid%22%3A3857%2C%22wkid%22%3A102100%7D',
   });
   map.addLayer({
     id: 'boston-bike-lanes',
@@ -100,9 +102,9 @@ map.on('load', async () => {
   let jsonData;
   try {
     jsonData = await d3.json('https://dsc106.com/labs/lab07/data/bluebikes-stations.json');
+    console.log('Loaded JSON Data:', jsonData);
   } catch (error) {
     console.error('Error loading JSON:', error);
-    return;
   }
 
   const trips = await d3.csv(
@@ -119,6 +121,7 @@ map.on('load', async () => {
   );
 
   const stations = computeStationTraffic(jsonData.data.stations);
+  console.log('Stations Array:', stations);
   const radiusScale = d3
     .scaleSqrt()
     .domain([0, d3.max(stations, (d) => d.totalTraffic)])
@@ -149,9 +152,9 @@ map.on('load', async () => {
   map.on('resize', updatePositions);
   map.on('moveend', updatePositions);
 
-  const timeSlider = document.getElementById('time-slider');
-  const selectedTime = document.getElementById('selected-time');
-  const anyTimeLabel = document.getElementById('any-time');
+  const timeSlider = document.getElementById('#time-slider');
+  const selectedTime = document.getElementById('#selected-time');
+  const anyTimeLabel = document.getElementById('#any-time');
 
   function updateScatterPlot(timeFilter) {
     const filteredStations = computeStationTraffic(stations, timeFilter);
@@ -161,9 +164,6 @@ map.on('load', async () => {
       .join('circle')
       .attr('r', (d) => radiusScale(d.totalTraffic))
       .style('--departure-ratio', (d) => stationFlow(d.departures / d.totalTraffic));
-    circles.select('title').text(
-      (d) => `${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`,
-    );
   }
 
   function updateTimeDisplay() {
